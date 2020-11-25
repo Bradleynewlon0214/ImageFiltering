@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 #include <math.h>
 #include <float.h>
@@ -26,12 +27,14 @@ typedef struct Node{
 int q_len = 0;
 node_t *head;
 
+pthread_t pool[20];
 void* thread_function(void *arg){
   while(1){
-    work_t* work = dequeue(head, &q_len);
-    if(work != NULL){
-      
-    }
+    printf("Got work!\n");
+    node_t* work_node = dequeue(head, &q_len);
+    // if(work_node != NULL){
+    //   printf("%d\n", work_node->work.index);
+    // }
   }
 }
 
@@ -70,6 +73,11 @@ int main(int argc, char *argv[]){
 
   dynamicCopyTo(1, imagePtr, total_size, combined);
   
+
+  for(int i = 0; i < 20; i++){
+    pthread_create(&pool[i], NULL, thread_function, NULL);
+  }
+
 
   head = linkedlist_init(&q_len);
   for(int y = 1; y < rows - 1; y++){

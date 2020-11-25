@@ -1,14 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct Work work_t;
 
-typedef struct Node node_t;
+typedef struct Work {
+    int index;
+    unsigned char *values;
+} work_t;
 
-node_t* linkedlist_init(int *len);
+typedef struct Node{
+  work_t *work;
+  struct Node* next;
+} node_t;
 
-void enqueue(node_t *head, work_t work, int *len);
 
-node_t* dequeue(node_t *head, int *len);
+void enqueue(work_t* work, int *len);
 
-void printList(node_t *head);
+work_t* dequeue(int *len);
+
+void printList();
