@@ -60,49 +60,49 @@ int main(int argc, char *argv[]){
 
 
 
-  //Processing Vertical Mask
-  for (int i = 0; i < rr; i++){
-    for (int j = 0; j < cc; j++){
-      verticalImage[i][j] = imagePtr[i*cols + j];
-    }
-  }
-  vertical = (image_ptr)verticalImage;
-  applyFilter(vertical, sobel_v, rr, cc);
-  printf("\nNow saving vertical mask image... \n");
-  printf("Statistics for Vertical Image: Mean: %d, Standard Deviation: %d\n", mean(vertical, rr, cc), stdev(vertical, rr, cc));
+  // //Processing Vertical Mask
+  // for (int i = 0; i < rr; i++){
+  //   for (int j = 0; j < cc; j++){
+  //     verticalImage[i][j] = imagePtr[i*cols + j];
+  //   }
+  // }
+  // vertical = (image_ptr)verticalImage;
+  // applyFilter(vertical, sobel_v, rr, cc);
+  // printf("\nNow saving vertical mask image... \n");
+  // printf("Statistics for Vertical Image: Mean: %d, Standard Deviation: %d\n", mean(vertical, rr, cc), stdev(vertical, rr, cc));
 
-  write_pnm(vertical, "vertical.pgm", rr, cc, type);
-  printf("Vertical image saved!\n"); 
-  //End Processing Vertical
+  // write_pnm(vertical, "vertical.pgm", rr, cc, type);
+  // printf("Vertical image saved!\n"); 
+  // //End Processing Vertical
 
   
 
 
-  //Processing Combined Mask
-  for (int i = 0; i < rr; i++){
-    for (int j = 0; j < cc; j++){
-      combinedImage[i][j] = imagePtr[i*cols + j];
-    }
-  }
-  combined = (image_ptr)combinedImage;
-  applyBothFilter(combined, sobel_h, sobel_v, rr, cc);
-  printf("\nNow saving combined mask image... \n");
-  printf("Statistics for Combined Image: Mean: %d, Standard Deviation: %d\n", mean(combined, rr, cc), stdev(combined, rr, cc));
+  // //Processing Combined Mask
+  // for (int i = 0; i < rr; i++){
+  //   for (int j = 0; j < cc; j++){
+  //     combinedImage[i][j] = imagePtr[i*cols + j];
+  //   }
+  // }
+  // combined = (image_ptr)combinedImage;
+  // applyBothFilter(combined, sobel_h, sobel_v, rr, cc);
+  // printf("\nNow saving combined mask image... \n");
+  // printf("Statistics for Combined Image: Mean: %d, Standard Deviation: %d\n", mean(combined, rr, cc), stdev(combined, rr, cc));
 
-  write_pnm(combined, "combined.pgm", rr, cc, type);
-  printf("Combined image saved!\n"); 
-  //End Processing Combined Mask
+  // write_pnm(combined, "combined.pgm", rr, cc, type);
+  // printf("Combined image saved!\n"); 
+  // //End Processing Combined Mask
   
 
 
-  //Processing Binary Image
-  bin(combined, rr, cc);
-  printf("\nNow saving binary image... \n");
-  printf("Statistics for Binary Image: Mean: %d, Standard Deviation: %d\n", mean(combined, rr, cc), stdev(combined, rr, cc));
+  // //Processing Binary Image
+  // bin(combined, rr, cc);
+  // printf("\nNow saving binary image... \n");
+  // printf("Statistics for Binary Image: Mean: %d, Standard Deviation: %d\n", mean(combined, rr, cc), stdev(combined, rr, cc));
 
-  write_pnm(combined, "binary.pgm", rr, cc, type);
-  printf("Binary image saved!\n");
-  //End Processing Binary Image
+  // write_pnm(combined, "binary.pgm", rr, cc, type);
+  // printf("Binary image saved!\n");
+  // //End Processing Binary Image
   
   return 0;
 }
@@ -122,8 +122,6 @@ void bin(image_ptr image, int height, int width){
         int exy = image[index];
         if(exy > t){
           image[index] = 255;
-        } else{
-          image[index] = 0;
         }
       }
     }
@@ -200,8 +198,8 @@ void applyFilter(image_ptr image, int mask[3][3], int height, int width){
           e += mask[p + 1][q + 1] * xi;
         }
       }
-
-      image[index] = abs(e / 7); //I was dividing this by 9 (size of mask) but, after experimentation, decided dividing by 7 produced a better result.
+      printf("Index: %d Edge Response: %u\n", index, e);
+      image[index] = abs(e / 9); //I was dividing this by 9 (size of mask) but, after experimentation, decided dividing by 7 produced a better result.
 
     }
   }

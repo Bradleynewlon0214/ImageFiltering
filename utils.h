@@ -9,5 +9,8 @@
 #include "iplib2New.h" 
 
 void dynamicCopyTo(int num_items, image_ptr item, int len, ...);
-int mean(image_ptr, int, int);
-int stdev(image_ptr, int, int);
+void array_push(unsigned char* arr, unsigned char value, int* len, int max);
+float mean(image_ptr, int, int);
+float stdev(image_ptr, int, int);
+void median(image_ptr image, int rows, int cols, char filename[]);
+void insertion_sort(image_ptr image, int rows, int cols);

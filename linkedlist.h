@@ -2,19 +2,22 @@
 #include <stdlib.h>
 
 
-typedef struct Work {
-    int index;
-    unsigned char *values;
-} work_t;
+typedef struct Data{
+  int index;
+  unsigned char e;
+} data_t;
 
 typedef struct Node{
-  work_t *work;
+  data_t data;
   struct Node* next;
 } node_t;
 
+node_t* getHead();
 
-void enqueue(work_t* work, int *len);
+void enqueue(int index, unsigned char e);
 
-work_t* dequeue(int *len);
+data_t* dequeue();
+
+void clear_queue();
 
 void printList();

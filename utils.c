@@ -15,25 +15,59 @@ void dynamicCopyTo(int num_items, image_ptr item, int len, ...){
   va_end(args);
 }
 
+void array_push(unsigned char* arr, unsigned char value, int* len, int max){
+  if(*len >= max){
+      return;
+  }
+
+  arr[*len] = value;
+  *len += 1;
+}
 
 
 //This function accepts a pointer to an image, its height, and its width then returns it's mean
-int mean(image_ptr image, int height, int width){
-  int n = height * width;
-  int sum = 0;
+float mean(image_ptr image, int height, int width){
+  float n = height * width;
+  float sum = 0;
   for(int i = 0; i < n; i++){
-    sum += image[i];
+    sum += (float)image[i];
   }
   return sum / n;
 }
 
 //This function accepts a pointer to an image, its height, and its width then returns it's standard deviation
-int stdev(image_ptr image, int height, int width){
-  int mu = mean(image, height, width);
-  int n = height * width;
-  int sum = 0;
+float stdev(image_ptr image, int height, int width){
+  float mu = mean(image, height, width);
+  float n = height * width;
+  float sum = 0;
   for(int i = 0; i < n; i++){
-    sum += (image[i] - mu) * (image[i] - mu);
+    sum += (float)((image[i] - mu) * (image[i] - mu));
   }
-  return sum / (n - 1);
+  return sqrt(sum / (n - 1));
+}
+
+//insertion sort for images
+void insertion_sort(image_ptr image, int rows, int cols) { 
+    int i, key, j;
+    int n = rows * cols;
+
+    for (i = 1; i < n; i++) { 
+        key = image[i]; 
+        j = i - 1; 
+  
+        /* Move elements of arr[0..i-1], that are 
+          greater than key, to one position ahead 
+          of their current position */
+        while (j >= 0 && image[j] > key) { 
+            image[j + 1] = image[j]; 
+            j = j - 1; 
+        } 
+        image[j + 1] = key; 
+    } 
+}
+
+//get median of images
+void median(image_ptr image, int rows, int cols, char filename[]){
+  int n = rows * cols;
+  printf("%s median: %u\n", filename, image[n / 2]);
 }

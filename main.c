@@ -2,60 +2,123 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <pthread.h>
+#include <sys/types.h>
 
 #include <math.h>
 #include <float.h>
 
+
 //This is the only way I could get gcc to quit yelling at me.
 #include "iplib2New.h"
-#include "utils.h" 
+#include "utils.h"
+#include "thpool.h"
 #include "linkedlist.h"
 
-enum Type {HEAD, DATA};
+void analysis(image_ptr image, char filename[]);
 
-typedef struct Work {
-    int index;
-    unsigned char *values;
-} work_t;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-typedef struct Node{
-  work_t work;
-  struct Node* next;
-  enum Type node_type;
-} node_t;
+int rows, cols, type;
+static const size_t num_threads = 20;
+static int sobel_h[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+static int sobel_v[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1}; 
 
-int q_len = 0;
-node_t *head;
 
-pthread_t pool[20];
-void* thread_function(void *arg){
-  while(1){
-    printf("Got work!\n");
-    node_t* work_node = dequeue(head, &q_len);
-    // if(work_node != NULL){
-    //   printf("%d\n", work_node->work.index);
-    // }
-  }
+void worker(int index, unsigned char *values, int *mask_one, int *mask_two, bool both){
+  int i, j; //loop control variables
+  unsigned char e = 0; //edge response variable
+
+  if(both){
+    unsigned char gx, gy = 0;
+    for(i = 0, j = 9; i < 9, j >= 0; i++, j--){
+      gx += mask_one[i] * values[j];
+      gy += mask_two[i] * values[j];
+    }
+    e = sqrt((gy * gy) + (gx + gx));
+  } else {
+    for(i = 0, j = 9; i < 9, j >= 0; i++, j--){
+      e += mask_one[i] * values[j]; //calculating edge response
+    } 
+  } 
+
+  pthread_mutex_lock(&mutex);
+  enqueue(index, e);          //putting edge response value and its corresponding index in a queue to be placed back in the image by the parent
+  pthread_mutex_unlock(&mutex);
+
 }
 
-void applyFilter(image_ptr, int[3][3], int, int);
+void process_image(image_ptr image_from, image_ptr image_target, bool both, int *mask_one, int *mask_two, int num_threads, char filename[]){
+  tpool_t *tm;
+  tm = tpool_create(num_threads);
 
-void array_push(unsigned char* arr, unsigned char value, int* len, int max){
-  
-  if(*len >= max){
-      return;
+  for(int y = 1; y < rows - 1; y++){
+    for(int x = 1; x < cols - 1; x++){
+      int index = y * cols + x;
+      unsigned char *values = malloc(9 * sizeof(unsigned char));
+
+      int len = 0;
+
+      for(int p = -1; p <= 1; p++){
+        for(int q = -1; q <= 1; q++){
+          unsigned char xi = image_from[(y + q) * cols + (x + p)];
+          array_push(values, xi, &len, 9);
+        }
+      }
+      if(both){
+        tpool_add_work(tm, worker, index, values, mask_one, mask_two, both);
+      } else {
+        tpool_add_work(tm, worker, index, values, mask_one, mask_one, both);
+      }
+      
+    }
   }
+  tpool_wait(tm);
+  tpool_destroy(tm);
 
-  arr[*len] = value;
-  *len += 1;
+
+  node_t *head = getHead();
+  node_t *it;
+  for(it = head; it != NULL; it = it->next){
+    int index = it->data.index;
+    unsigned char e = it->data.e;
+
+    image_target[index] = abs(e / 3);
+  }
+    
+  clear_queue();
+
+  write_pnm(image_target, filename, rows, cols, type);
+}
+
+void analysis(image_ptr image, char filename[]){
+  float mu = mean(image, rows, cols);
+  float s = stdev(image, rows, cols);
+
+  printf("%s mean: %f0.2 stdev: %f0.2\n", filename, mu, s);
+}
+
+void bin(image_ptr image, char filename[]){
+    float mu = mean(image, rows, cols);
+    float s = stdev(image, rows, cols);
+    float t = (mu + s);
+    
+    for(int y = 0; y < rows; y++){
+      for(int x = 0; x < cols; x++){
+        int index = y * cols + x;
+        float exy = image[index];
+        if(exy > t){
+          image[index] = 255;
+        } else{
+          image[index] = 0;
+        }
+      }
+    }
+    write_pnm(image, filename, rows, cols, type);
 }
 
 int main(int argc, char *argv[]){
 
   image_ptr imagePtr, combined, vertical, horizontal;
-
-  int rows, cols;
-  int type;
 
   printf("Reading input image... \n");
 
@@ -63,7 +126,9 @@ int main(int argc, char *argv[]){
 
   int row_size = cols * 1;
   int total_size = (unsigned long) rows * row_size;
-
+  
+  vertical = (image_ptr) malloc(total_size);
+  horizontal = (image_ptr) malloc(total_size);
   combined = (image_ptr) malloc(total_size);
   
   printf("Image read successfully! \n");
@@ -71,69 +136,31 @@ int main(int argc, char *argv[]){
   type = 5;
 
 
-  dynamicCopyTo(1, imagePtr, total_size, combined);
   
 
-  for(int i = 0; i < 20; i++){
-    pthread_create(&pool[i], NULL, thread_function, NULL);
-  }
+  dynamicCopyTo(3, imagePtr, total_size, vertical, horizontal, combined);
 
 
-  head = linkedlist_init(&q_len);
-  for(int y = 1; y < rows - 1; y++){
-    for(int x = 1; x < cols - 1; x++){
-
-      unsigned char xi;
-      int len = 0;
-      unsigned char values[9];
-
-      
-      for(int p = -1; p <= 1; p++){
-        for(int q = -1; q <=1; q++){
-          xi = combined[(y + q) * cols + (x + p)];
-          array_push(values, xi, &len, 9);
-        }
-      }
+  process_image(imagePtr, vertical, false, sobel_v, sobel_v, num_threads, "vertical.pgm");
+  process_image(imagePtr, horizontal, false, sobel_h, sobel_h, num_threads, "horizontal.pgm");
+  process_image(imagePtr, combined, true, sobel_h, sobel_v, num_threads, "combined.pgm");
+  bin(combined, "binary.pgm");
 
 
-      work_t new_work;
-      new_work.index = y * cols + x;
-      new_work.values = values;
+  analysis(vertical, "vertical.pgm");
+  // insertion_sort(vertical, rows, cols);
+  // median(vertical, rows, cols, "vertical.pgm");
 
-      enqueue(head, new_work, &q_len);
+  analysis(horizontal, "horizontal.pgm");
+  // insertion_sort(horizontal, rows, cols);
+  // median(horizontal, rows, cols, "horizontal.pgm");
 
-    }
-  }
-  write_pnm(combined, "binary.pgm", rows, cols, type);
-}
+  analysis(combined, "combined.pgm");
+  // insertion_sort(combined, rows, cols);
+  // median(combined, rows, cols, "combined.pgm");
 
+  analysis(imagePtr, argv[1]);
+  // insertion_sort(imagePtr, rows, cols);
+  // median(imagePtr, rows, cols, argv[1]);
 
-
-//This function accepts a pointer to an image, a mask, and it's height and width
-//The function loops through the image and on each pixel its computes it's edge response value given the mask.
-//The pixel's value is then set to the absolute value of the edge response divided by 7. I explain why 7 in the function body.
-void applyFilter(image_ptr image, int mask[3][3], int height, int width){
-
-  int x, y, p, q; //loop control variables
-  unsigned char e; //edge response value
-
-  for(y = 1; y < height - 1; y++){
-    for(x = 1; x < width - 1; x++){
-      int index = y * width + x;
-
-      e = 0; //Set edge response to 0 on each new pixel
-
-      //kernel convolution
-      for(p = -1; p <= 1; p++){
-        for(q = -1; q <= 1; q++){
-          unsigned char xi = image[(y + q) * width + (x + p)];
-          e += mask[p + 1][q + 1] * xi;
-        }
-      }
-
-      image[index] = abs(e / 7); //I was dividing this by 9 (size of mask) but, after experimentation, decided dividing by 7 produced a better result.
-
-    }
-  }
-  
 }

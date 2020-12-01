@@ -1,63 +1,31 @@
-#include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "linkedlist.h"
 
 
 
-pthread_t pool[20];
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int q_len;
+int main(int argc, char *argv[]){
 
-void* thread_function(void *arg){
-    while(1){
-        pthread_mutex_lock(&mutex);
-        dequeue(&q_len);
-        pthread_mutex_unlock(&mutex);
-  }
-}
+    enqueue(9, 9);
+    enqueue(9, 9);
+    enqueue(9, 9);
+    enqueue(9, 9);
+    enqueue(9, 9);
+    enqueue(9, 9);
 
+    printList();
 
-int main(void){
-
-    for(int i = 0; i < 20; i++){
-        pthread_create(&pool[i], NULL, thread_function, NULL);
-    }
-
-    unsigned char values[9] = {0};
-
-    work_t work = {
-        15,
-        values,
-    };
-    work_t work_two = {
-        16,
-        values,
-    };
-
-    work_t work_three = {
-        17,
-        values,
-    };
+    clear_queue();
 
 
-    q_len = 0;
+    enqueue(3, 3);
 
-    enqueue(&work, &q_len);
+    printList();
 
-    enqueue(&work_two, &q_len);
-
-    enqueue(&work_three, &q_len);
-
-
-    // printList();
-
-
-    // work_t *test;
-    // while((test = dequeue(&q_len)) != NULL){
-    //     printf("%d\n", test->index);
-    //     printf("q_len: %d\n", q_len);
-    // }
-
+    return 0;
 }
