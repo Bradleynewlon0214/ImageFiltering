@@ -13,11 +13,6 @@ typedef struct Node{
 } node_t;
 
 node_t* getHead();
-
 void enqueue(int index, unsigned char e);
-
-data_t* dequeue();
-
 void clear_queue();
-
 void printList();

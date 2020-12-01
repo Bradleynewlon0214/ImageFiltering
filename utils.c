@@ -71,3 +71,11 @@ void median(image_ptr image, int rows, int cols, char filename[]){
   int n = rows * cols;
   printf("%s median: %u\n", filename, image[n / 2]);
 }
+
+
+void analysis(image_ptr image, int rows, int cols, char filename[]){
+  float mu = mean(image, rows, cols);
+  float s = stdev(image, rows, cols);
+
+  printf("%s mean: %.2f stdev: %.2f\n", filename, mu, s);
+}

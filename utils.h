@@ -14,3 +14,4 @@ float mean(image_ptr, int, int);
 float stdev(image_ptr, int, int);
 void median(image_ptr image, int rows, int cols, char filename[]);
 void insertion_sort(image_ptr image, int rows, int cols);
+void analysis(image_ptr image, int rows, int cols, char filename[]);
