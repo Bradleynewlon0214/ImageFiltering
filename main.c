@@ -195,25 +195,25 @@ int main(int argc, char *argv[]){
   * child does vertical and horizontal analysis
   * parent does combined and original image analysis
   */
-  if(pid == 0){
-    analysis(vertical, rows, cols,  "vertical.pgm");
-    insertion_sort(vertical, rows, cols);
-    median(vertical, rows, cols, "vertical.pgm");
+//   if(pid == 0){
+//     analysis(vertical, rows, cols,  "vertical.pgm");
+//     insertion_sort(vertical, rows, cols);
+//     median(vertical, rows, cols, "vertical.pgm");
 
-    analysis(horizontal, rows, cols, "horizontal.pgm");
-    insertion_sort(horizontal, rows, cols);
-    median(horizontal, rows, cols, "horizontal.pgm");
-    exit(0);
+//     analysis(horizontal, rows, cols, "horizontal.pgm");
+//     insertion_sort(horizontal, rows, cols);
+//     median(horizontal, rows, cols, "horizontal.pgm");
+//     exit(0);
 
-  } else {
-    analysis(combined, rows, cols, "combined.pgm");
-    insertion_sort(combined, rows, cols);
-    median(combined, rows, cols, "combined.pgm");
+//   } else {
+//     analysis(combined, rows, cols, "combined.pgm");
+//     insertion_sort(combined, rows, cols);
+//     median(combined, rows, cols, "combined.pgm");
 
-    analysis(imagePtr, rows, cols,  argv[1]);
-    insertion_sort(imagePtr, rows, cols);
-    median(imagePtr, rows, cols, argv[1]);
-  }
+//     analysis(imagePtr, rows, cols,  argv[1]);
+//     insertion_sort(imagePtr, rows, cols);
+//     median(imagePtr, rows, cols, argv[1]);
+//   }
 
   while((wpid = wait(&status)) > 0); //wait for child to finish
 
